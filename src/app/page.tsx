@@ -3,12 +3,16 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { HERO_PHOTOS as HERO_GALLERY } from '@/data/gallery';
+import { CLASS_GROUPS } from '@/data/classes';
 
 export default function HariETechnoSchool() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSubject, setModalSubject] = useState('Admission Enquiry 2026–27');
   const [submitted, setSubmitted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileStudentsOpen, setMobileStudentsOpen] = useState(false);
+  const [mobileOpenGroup, setMobileOpenGroup] = useState<string | null>(null);
 
   const openEnquiry = (subjectTitle?: string) => {
     if (subjectTitle) setModalSubject(subjectTitle);
@@ -22,37 +26,52 @@ export default function HariETechnoSchool() {
       <header className="site-nav">
         <div className="container nav-wrapper">
           <Link href="/" className="logo-link">
-            <div className="logo-brand-row">
-              <span className="logo-main-text">HARI</span>
-              <span className="logo-highlight-text">E-TECHNO</span>
-              <span className="logo-dot"></span>
+            <Image src="/images/school-logo.png" alt="Hari E-Techno School emblem" width={52} height={52} className="logo-emblem" priority />
+            <div className="logo-text">
+              <Image src="/images/school-name.png" alt="Hari Educational Institutions" width={1600} height={110} className="logo-name" priority />
+              <span className="logo-sub-text">
+                RAJANAGARAM • AP
+              </span>
             </div>
-            <span className="logo-sub-text">
-              RAJANAGARAM • AP
-            </span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="desktop-nav">
             <ul className="nav-menu">
-              <li><Link href="#about">About</Link></li>
               <li><Link href="/dasara-camp" style={{ color: '#FF5E3A', fontWeight: 800 }}>🪔 Dasara Live</Link></li>
               <li><Link href="#grand-exam">Grand Exam 2026</Link></li>
               <li><Link href="#academics">Academics</Link></li>
+              <li className="nav-dropdown">
+                <Link href="/students" aria-haspopup="true">
+                  Student Corner <span className="nav-caret" aria-hidden="true">▾</span>
+                </Link>
+                <ul className="nav-dropdown-menu">
+                  <li className="nav-dropdown-login">
+                    <Link href="/login"><span>🔒 Student / Teacher Login</span></Link>
+                  </li>
+                  {CLASS_GROUPS.map((group) => (
+                    <li key={group.id} className="nav-submenu">
+                      <Link href={`/students#${group.id}`} aria-haspopup="true">
+                        <span>{group.emoji} {group.name}</span>
+                        <span className="nav-submenu-arrow" aria-hidden="true">›</span>
+                      </Link>
+                      <ul className="nav-submenu-list">
+                        {group.classes.map((c) => (
+                          <li key={c.id}><Link href={`/students/${c.id}`}>{c.navLabel}</Link></li>
+                        ))}
+                      </ul>
+                    </li>
+                  ))}
+                </ul>
+              </li>
               <li><Link href="#facilities">Facilities</Link></li>
-              <li><Link href="#principal">Principal&apos;s Desk</Link></li>
               <li><Link href="#admissions">Admissions</Link></li>
+              <li><Link href="/gallery">Gallery</Link></li>
             </ul>
           </nav>
 
           {/* Header Action Buttons & Mobile Hamburger */}
           <div className="nav-actions">
-            <a 
-              href="tel:07799114947" 
-              className="btn-pill btn-white nav-call-btn"
-            >
-              <span>📞 077991 14947</span>
-            </a>
             <button 
               type="button" 
               className="btn-pill btn-coral-gradient nav-enquire-btn"
@@ -79,12 +98,47 @@ export default function HariETechnoSchool() {
           <div className="mobile-nav-drawer">
             <ul className="mobile-nav-list">
               <li><Link href="/dasara-camp" onClick={() => setMobileMenuOpen(false)} style={{ color: '#FF5E3A', fontWeight: 800 }}>🪔 Dasara Holidays Live Portal</Link></li>
-              <li><Link href="#about" onClick={() => setMobileMenuOpen(false)}>About Our School</Link></li>
               <li><Link href="#grand-exam" onClick={() => setMobileMenuOpen(false)}>🚀 Grand Exam 2026</Link></li>
               <li><Link href="#academics" onClick={() => setMobileMenuOpen(false)}>Academic Programmes</Link></li>
+              <li>
+                <button
+                  type="button"
+                  className="mobile-nav-toggle-row"
+                  aria-expanded={mobileStudentsOpen}
+                  onClick={() => setMobileStudentsOpen(!mobileStudentsOpen)}
+                >
+                  🎓 Student Corner <span aria-hidden="true">{mobileStudentsOpen ? '−' : '+'}</span>
+                </button>
+                {mobileStudentsOpen && (
+                  <ul className="mobile-subnav">
+                    <li><Link href="/login" onClick={() => setMobileMenuOpen(false)}>🔒 Student / Teacher Login</Link></li>
+                    {CLASS_GROUPS.map((group) => (
+                      <li key={group.id}>
+                        <button
+                          type="button"
+                          className="mobile-nav-toggle-row mobile-nav-toggle-sub"
+                          aria-expanded={mobileOpenGroup === group.id}
+                          onClick={() => setMobileOpenGroup(mobileOpenGroup === group.id ? null : group.id)}
+                        >
+                          {group.emoji} {group.name} <span aria-hidden="true">{mobileOpenGroup === group.id ? '−' : '+'}</span>
+                        </button>
+                        {mobileOpenGroup === group.id && (
+                          <div className="mobile-class-chips">
+                            {group.classes.map((c) => (
+                              <Link key={c.id} href={`/students/${c.id}`} onClick={() => setMobileMenuOpen(false)}>
+                                {c.navLabel}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
               <li><Link href="#facilities" onClick={() => setMobileMenuOpen(false)}>Campus Facilities</Link></li>
-              <li><Link href="#principal" onClick={() => setMobileMenuOpen(false)}>Principal&apos;s Desk</Link></li>
               <li><Link href="#admissions" onClick={() => setMobileMenuOpen(false)}>Admissions 2026–27</Link></li>
+              <li><Link href="/gallery" onClick={() => setMobileMenuOpen(false)}>📸 Photo Gallery</Link></li>
             </ul>
             <div className="mobile-nav-cta">
               <a 
@@ -228,7 +282,7 @@ export default function HariETechnoSchool() {
               </div>
               <div className="hero-check-item">
                 <span className="check-icon-circle">✓</span>
-                <span>CBSE Inspired Pedagogy</span>
+                <span>Techno Curriculum</span>
               </div>
             </div>
 
@@ -254,51 +308,20 @@ export default function HariETechnoSchool() {
               </a>
             </div>
           </div>
+        </div>
 
-          {/* 3-Column Hero Visual Graphic Row with Real Student Photos & 3D Digital Learning Artwork */}
-          <div className="hero-visual-row">
-            {/* Left Real Student Photo on Green Arch */}
-            <div className="hero-kid-card-left">
-              <div className="kid-backdrop-green">
-                <img 
-                  src="/images/hero_boy.jpg" 
-                  alt="Happy student boy with backpack" 
-                  className="real-student-photo"
-                />
+        {/* Infinite-loop campus gallery: list is rendered twice and slides by one copy */}
+        <div className="hero-gallery" aria-label="School life gallery">
+          <div className="hero-gallery-track">
+            {[...HERO_GALLERY, ...HERO_GALLERY].map((photo, i) => (
+              <div
+                key={i}
+                className={`hero-gallery-item ${photo.shape}`}
+                aria-hidden={i >= HERO_GALLERY.length}
+              >
+                <img src={photo.src} alt={i < HERO_GALLERY.length ? photo.alt : ''} loading={i < 4 ? 'eager' : 'lazy'} />
               </div>
-            </div>
-
-            {/* Center 3D Digital Classroom Artwork */}
-            <div className="hero-center-illustration">
-              <div className="hero-center-digital-card">
-                <img 
-                  src="/images/hero_digital_learning.jpg" 
-                  alt="3D Digital Education and Interactive Learning" 
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    borderRadius: '20px'
-                  }}
-                />
-                
-                {/* Floating pill over artwork */}
-                <div className="hero-center-digital-badge">
-                  ✨ 100% Digital Integration
-                </div>
-              </div>
-            </div>
-
-            {/* Right Real Student Photo on Yellow Arch */}
-            <div className="hero-kid-card-right">
-              <div className="kid-backdrop-yellow">
-                <img 
-                  src="/images/hero_girl.jpg" 
-                  alt="Smiling student girl in uniform dress" 
-                  className="real-student-photo"
-                />
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -518,7 +541,7 @@ export default function HariETechnoSchool() {
                 </div>
               </div>
               <div className="program-name">Pre-Primary</div>
-              <div className="program-class-tag">Joyful Foundational Learning</div>
+              <div className="program-class-tag">UKG · Joyful Foundational Learning</div>
             </div>
 
             {/* 2. Primary School */}
@@ -551,19 +574,19 @@ export default function HariETechnoSchool() {
               <div className="program-class-tag">Class 6 to 8 · Analytical Skills</div>
             </div>
 
-            {/* 4. High School & Visual Arts */}
-            <div className="program-item" onClick={() => openEnquiry('High School Admission')}>
+            {/* 4. Intermediate College */}
+            <div className="program-item" onClick={() => openEnquiry('Intermediate College Admission')}>
               <div className="program-avatar-container">
                 <div className="backdrop-yellow-arch">
-                  <img 
-                    src="/images/student_art.jpg" 
-                    alt="High school student with art canvas" 
+                  <img
+                    src="/images/student_intermediate.jpg"
+                    alt="Intermediate college students in uniform blazers"
                     className="program-real-img"
                   />
                 </div>
               </div>
-              <div className="program-name">High School</div>
-              <div className="program-class-tag">Class 9 & 10 · Board Excellence</div>
+              <div className="program-name">Intermediate College</div>
+              <div className="program-class-tag">Class 11 & 12 · Junior College</div>
             </div>
           </div>
         </div>
@@ -740,14 +763,14 @@ export default function HariETechnoSchool() {
             {/* Left: Professional Principal Photo in Arched Frame */}
             <div style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
               <div className="principal-photo-arch">
-                <img 
-                  src="/images/principal_photo.jpg" 
-                  alt="Principal, HARI E-TECHNO SCHOOL" 
+                <img
+                  src="/images/hari_photo.jpg"
+                  alt="Hari, Principal & Academic Director, HARI E-TECHNO SCHOOL"
                   style={{
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    objectPosition: 'top center'
+                    objectPosition: 'center 30%'
                   }}
                 />
               </div>
@@ -778,7 +801,7 @@ export default function HariETechnoSchool() {
               <span className="badge-tag" style={{ background: '#FFEDE9', color: '#FF5E3A', border: 'none', marginBottom: '16px' }}>
                 Leadership Perspective
               </span>
-              
+
               <h2 style={{ fontSize: '36px', marginBottom: '20px', lineHeight: 1.2 }}>
                 From the <span className="text-coral">Principal&apos;s</span> Desk
               </h2>
@@ -810,8 +833,8 @@ export default function HariETechnoSchool() {
               </p>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn-pill btn-coral-gradient"
                   onClick={() => openEnquiry('Connect with Principal Office')}
                 >
@@ -878,6 +901,7 @@ export default function HariETechnoSchool() {
         <div className="container">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '36px', marginBottom: '40px' }}>
             <div>
+              <Image src="/images/school-logo.png" alt="Hari E-Techno School emblem" width={72} height={72} style={{ marginBottom: '12px' }} />
               <div style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'var(--font-serif)', marginBottom: '12px' }}>
                 HARI <span style={{ color: '#FF5E3A' }}>E-TECHNO</span> SCHOOL
               </div>
@@ -1007,10 +1031,10 @@ export default function HariETechnoSchool() {
                       Grade / Class Applying For *
                     </label>
                     <select className="calc-select" style={{ width: '100%' }}>
+                      <option>Pre-Primary (UKG)</option>
                       <option>Primary School (Class 1 to 5)</option>
                       <option>Middle School (Class 6 to 8)</option>
-                      <option>High School / 10th Board (Class 9 & 10)</option>
-                      <option>Pre-Primary / Kindergarten</option>
+                      <option>Intermediate College (Class 11 & 12)</option>
                     </select>
                   </div>
 

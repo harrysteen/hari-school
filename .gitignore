@@ -26,6 +26,14 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# demo login passwords (plain text) — never commit
+demo-logins.md
+
+# large original media (videos are hosted on Dropbox; web copies live in /public)
+*.MOV
+*.mov
+/video-uploads/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

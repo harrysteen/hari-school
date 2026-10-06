@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface ClassScheduleItem {
   id: string;
@@ -106,17 +107,16 @@ export default function DasaraCampPage() {
       <header className="site-nav">
         <div className="container nav-wrapper">
           <Link href="/" className="logo-link">
-            <div className="logo-brand-row">
-              <span className="logo-main-text">HARI</span>
-              <span className="logo-highlight-text">E-TECHNO</span>
-              <span className="logo-dot"></span>
+            <Image src="/images/school-logo.png" alt="Hari E-Techno School emblem" width={52} height={52} className="logo-emblem" priority />
+            <div className="logo-text">
+              <Image src="/images/school-name.png" alt="Hari Educational Institutions" width={1600} height={110} className="logo-name" priority />
+              <span className="logo-sub-text">RAJANAGARAM • AP</span>
             </div>
-            <span className="logo-sub-text">RAJANAGARAM • AP</span>
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Link href="/" className="btn-pill btn-white" style={{ fontSize: '13.5px', padding: '8px 16px' }}>
-              ← Back to Main Site
+              ← Back<span className="hide-on-phone"> to Main Site</span>
             </Link>
             {isLoggedIn && (
               <button 
