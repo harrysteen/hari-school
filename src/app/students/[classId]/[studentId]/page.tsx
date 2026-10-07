@@ -3,10 +3,12 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import PageHeader from '@/components/PageHeader';
 import NoAccess from '@/components/NoAccess';
+import StudentPhoto from '@/components/StudentPhoto';
 import { findClass } from '@/data/classes';
 import { EXAMS, NEXT_EXAM, SUBJECTS, gradeFor, type InstallmentStatus } from '@/data/students-demo';
 import { canViewStudent, getSession } from '@/lib/auth';
-import { findStudentInClass, getRoster } from '@/lib/roster';
+import { getRoster } from '@/lib/roster';
+import { photoVersion } from '@/lib/student-photos';
 
 type Props = { params: Promise<{ classId: string; studentId: string }> };
 
@@ -37,10 +39,12 @@ export default async function StudentDashboard({ params }: Props) {
   if (!canViewStudent(session, classId, studentId)) return <NoAccess session={session} />;
 
   const schoolClass = findClass(classId);
-  const student = findStudentInClass(classId, studentId);
+  const roster = await getRoster(classId);
+  const student = roster?.students.find((s) => s.id === studentId);
   if (!schoolClass || !student) notFound();
-  const classmates = getRoster(classId)?.students ?? [];
+  const classmates = roster?.students ?? [];
   const isStaff = session.role !== 'student';
+  const photo = await photoVersion(classId, student.id);
 
   const { fees, marks, attendance } = student;
   const last = EXAMS.length - 1;
@@ -50,8 +54,8 @@ export default async function StudentDashboard({ params }: Props) {
   const delta = overall - avgFor(last - 1);
   const working = attendance.reduce((s, m) => s + m.working, 0);
   const present = attendance.reduce((s, m) => s + m.present, 0);
-  const attendancePct = Math.round((present / working) * 100);
-  const paidPct = Math.round((fees.paid / fees.total) * 100);
+  const attendancePct = working ? Math.round((present / working) * 100) : 0;
+  const paidPct = fees.total ? Math.round((fees.paid / fees.total) * 100) : 100;
   const feeState = fees.overdue > 0 ? STATUS.overdue : fees.pending > 0 ? STATUS['due-soon'] : STATUS.paid;
 
   // Previous/next student buttons are for staff only — students can open just their own page
@@ -66,13 +70,13 @@ export default async function StudentDashboard({ params }: Props) {
         : <PageHeader />}
 
       <main className="container dash">
-        <div className="demo-banner" role="note">
+        {roster?.isDemo && <div className="demo-banner" role="note">
           <strong>Demo data</strong> · This is a sample student created to preview the dashboard. Real student records should only be shown after a parent logs in.
-        </div>
+        </div>}
 
         {/* Profile */}
         <section className="dash-profile">
-          <span className="dash-avatar" aria-hidden="true">{student.name.charAt(0)}</span>
+          <StudentPhoto classId={classId} studentId={student.id} name={student.name} version={photo} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 className="dash-name">{student.name}</h1>
             <div className="dash-meta">

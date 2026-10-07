@@ -1691,6 +1691,10 @@ h1, h2, h3, h4 {
   justify-content: center;
 }
 
+img.class-student-avatar {
+  object-fit: cover;
+}
+
 .class-student-name {
   display: block;
   font-weight: 700;
@@ -1871,9 +1875,62 @@ h1, h2, h3, h4 {
   padding: clamp(16px, 2.5vw, 24px);
 }
 
+.dash-photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.dash-avatar-img {
+  object-fit: cover;
+  background: #F1ECE3;
+}
+
+.dash-photo-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.dash-photo-btn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FF4D24;
+  background: #FFEDE9;
+  border: none;
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dash-photo-btn:hover:not(:disabled) {
+  background: #FFDCD3;
+}
+
+.dash-photo-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.dash-photo-btn.is-quiet {
+  color: #6B625A;
+  background: #F4F1EB;
+}
+
+.dash-photo-error {
+  font-size: 12px;
+  color: #B42318;
+  max-width: 160px;
+  text-align: center;
+  margin: 0;
+}
+
 .dash-avatar {
-  width: 64px;
-  height: 64px;
+  width: 88px;
+  height: 88px;
   flex-shrink: 0;
   border-radius: 50%;
   background: linear-gradient(135deg, #FF6F43 0%, #FF4D24 100%);

@@ -37,3 +37,6 @@ demo-logins.md
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# uploaded student photos (children's images) — never commit
+/student-photos/

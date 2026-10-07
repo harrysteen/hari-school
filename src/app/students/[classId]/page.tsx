@@ -6,6 +6,7 @@ import NoAccess from '@/components/NoAccess';
 import { ALL_CLASSES, findClass } from '@/data/classes';
 import { canViewClass, getSession } from '@/lib/auth';
 import { getRoster } from '@/lib/roster';
+import { photoVersion } from '@/lib/student-photos';
 
 type Props = { params: Promise<{ classId: string }> };
 
@@ -28,8 +29,9 @@ export default async function ClassPage({ params }: Props) {
   if (!session) redirect(`/login?next=/students/${classId}`);
   if (!canViewClass(session, classId)) return <NoAccess session={session} />;
 
-  const roster = getRoster(classId);
+  const roster = await getRoster(classId);
   const students = roster?.students ?? [];
+  const photos = await Promise.all(students.map((s) => photoVersion(classId, s.id)));
   const { group } = schoolClass;
   const index = ALL_CLASSES.findIndex((c) => c.id === schoolClass.id);
   // Only admins can open other classes, so only they get previous/next class buttons
@@ -78,10 +80,13 @@ export default async function ClassPage({ params }: Props) {
           <h2 className="class-students-title">Students</h2>
           {students.length > 0 ? (
             <ol className="class-student-grid">
-              {students.map((s) => (
+              {students.map((s, i) => (
                 <li key={s.id}>
                   <Link href={`/students/${schoolClass.id}/${s.id}`} className="class-student-card is-link">
-                    <span className="class-student-avatar" aria-hidden="true">{s.name.charAt(0)}</span>
+                    {photos[i]
+                      // eslint-disable-next-line @next/next/no-img-element -- private, auth-checked image
+                      ? <img className="class-student-avatar" src={`/api/student-photo/${schoolClass.id}/${s.id}?v=${photos[i]}`} alt="" />
+                      : <span className="class-student-avatar" aria-hidden="true">{s.name.charAt(0)}</span>}
                     <span style={{ flex: 1 }}>
                       <span className="class-student-name">{s.name}</span>
                       <span className="class-student-roll">Roll No. {s.roll}</span>
