@@ -83,8 +83,8 @@ export default function DasaraCampPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!studentRoll.trim()) {
-      alert('Please enter your Student Roll Number / Admission Number');
+    if (!studentRoll || !studentName.trim()) {
+      alert('Please enter your Roll Number and your name');
       return;
     }
     setIsLoggedIn(true);
@@ -215,20 +215,24 @@ export default function DasaraCampPage() {
               Student Portal Access
             </h2>
             <p style={{ fontSize: '13.5px', color: 'var(--color-secondary-text)', marginBottom: '24px' }}>
-              Enter your Roll Number / Admission Number to access your live classroom links and daily holiday materials.
+              Enter your Roll Number and name to access your live classroom links and daily holiday materials.
             </p>
 
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-dark)', display: 'block', marginBottom: '6px' }}>
-                  Student Roll / Admission No. *
+                  Student Roll Number *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. HET-2026-042 or 104"
+                  inputMode="numeric"
+                  pattern="[0-9]+"
+                  maxLength={10}
+                  title="Numbers only"
+                  placeholder="e.g. 104"
                   value={studentRoll}
-                  onChange={(e) => setStudentRoll(e.target.value)}
+                  onChange={(e) => setStudentRoll(e.target.value.replace(/[^0-9]/g, ''))}
                   style={{
                     width: '100%',
                     padding: '12px 16px',
@@ -244,13 +248,17 @@ export default function DasaraCampPage() {
 
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-dark)', display: 'block', marginBottom: '6px' }}>
-                  Student Name (Optional)
+                  Student Name *
                 </label>
                 <input
                   type="text"
+                  required
+                  pattern="[A-Za-z. ]+"
+                  maxLength={60}
+                  title="Letters only"
                   placeholder="e.g. K. Sai Varun"
                   value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
+                  onChange={(e) => setStudentName(e.target.value.replace(/[^A-Za-z. ]/g, ''))}
                   style={{
                     width: '100%',
                     padding: '12px 16px',

@@ -10,6 +10,8 @@ import { photoVersion } from '@/lib/student-photos';
 
 type Props = { params: Promise<{ classId: string }> };
 
+const rupees = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+
 // Rendered per request: the page depends on who is logged in
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +35,16 @@ export default async function ClassPage({ params }: Props) {
   const students = roster?.students ?? [];
   const photos = await Promise.all(students.map((s) => photoVersion(classId, s.id)));
   const { group } = schoolClass;
+
+  // Class fee totals, added up from each student's instalments in Sanity. Admins only.
+  const isAdmin = session.role === 'admin';
+  const feeTotal = students.reduce((sum, s) => sum + s.fees.total, 0);
+  const feePaid = students.reduce((sum, s) => sum + s.fees.paid, 0);
+  const feePending = students.reduce((sum, s) => sum + s.fees.pending, 0);
+  const feeOverdue = students.reduce((sum, s) => sum + s.fees.overdue, 0);
+  const studentsWithDues = students.filter((s) => s.fees.pending > 0).length;
+  const studentsOverdue = students.filter((s) => s.fees.overdue > 0).length;
+  const paidPct = feeTotal ? Math.round((feePaid / feeTotal) * 100) : 0;
   const index = ALL_CLASSES.findIndex((c) => c.id === schoolClass.id);
   // Only admins can open other classes, so only they get previous/next class buttons
   const prev = session.role === 'admin' ? ALL_CLASSES[index - 1] : undefined;
@@ -75,6 +87,43 @@ export default async function ClassPage({ params }: Props) {
           </div>
         </div>
 
+        {/* Fee summary — admins only */}
+        {isAdmin && students.length > 0 && (
+          <section aria-labelledby="class-fees-title" style={{ marginBottom: '32px' }}>
+            <h2 id="class-fees-title" className="class-students-title">Fees · 2026–27</h2>
+            <div className="dash-tiles">
+              <div className="dash-tile">
+                <div className="dash-tile-label">Total fee</div>
+                <div className="dash-tile-value">{rupees(feeTotal)}</div>
+                <div className="dash-tile-note">{students.length} students</div>
+              </div>
+              <div className="dash-tile">
+                <div className="dash-tile-label">Collected</div>
+                <div className="dash-tile-value">{rupees(feePaid)}</div>
+                <div className="dash-tile-note">{paidPct}% of total</div>
+              </div>
+              <div className="dash-tile">
+                <div className="dash-tile-label">Pending</div>
+                <div className="dash-tile-value">{rupees(feePending)}</div>
+                <div className="dash-tile-note">{studentsWithDues} student{studentsWithDues === 1 ? '' : 's'} yet to pay in full</div>
+              </div>
+              <div className="dash-tile">
+                <div className="dash-tile-label">Overdue</div>
+                <div className="dash-tile-value">{rupees(feeOverdue)}</div>
+                <div className="dash-tile-note">
+                  <span className={`status-pill ${feeOverdue > 0 ? 'status-critical' : 'status-good'}`}>
+                    <span className="status-icon" aria-hidden="true">{feeOverdue > 0 ? '!' : '✓'}</span>
+                    {feeOverdue > 0 ? `${studentsOverdue} student${studentsOverdue === 1 ? '' : 's'} past due date` : 'Nothing overdue'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="fee-meter" role="img" aria-label={`${paidPct}% of the class fee collected`} style={{ marginTop: '16px' }}>
+              <div className="fee-meter-fill" style={{ width: `${paidPct}%` }} />
+            </div>
+          </section>
+        )}
+
         {/* Student list */}
         <div className="class-students">
           <h2 className="class-students-title">Students</h2>
@@ -89,7 +138,10 @@ export default async function ClassPage({ params }: Props) {
                       : <span className="class-student-avatar" aria-hidden="true">{s.name.charAt(0)}</span>}
                     <span style={{ flex: 1 }}>
                       <span className="class-student-name">{s.name}</span>
-                      <span className="class-student-roll">Roll No. {s.roll}</span>
+                      <span className="class-student-roll">
+                        Roll No. {s.roll}
+                        {isAdmin && (s.fees.pending > 0 ? ` · ${rupees(s.fees.pending)} pending` : ' · Fees paid')}
+                      </span>
                     </span>
                     <span className="class-student-go" aria-hidden="true">→</span>
                   </Link>
