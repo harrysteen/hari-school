@@ -12,16 +12,16 @@ interface ClassSlot {
 }
 
 // One live hour per class. Keys must match the <option> values of the class dropdown.
-// TODO: replace the meetLink placeholders with each class's real Meet/Zoom link.
+// Fixed daily Meet rooms owned by kumarraj6304467271@gmail.com (Google Calendar recurring events).
 const CLASS_SCHEDULE: Record<string, ClassSlot> = {
-  'Class 1': { startHour: 8, endHour: 9, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
-  'Class 2': { startHour: 9, endHour: 10, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
-  'Class 3': { startHour: 10, endHour: 11, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
-  'Class 4': { startHour: 11, endHour: 12, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
-  'Class 5': { startHour: 12, endHour: 13, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
-  'Class 6': { startHour: 13, endHour: 14, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
-  'Class 7': { startHour: 14, endHour: 15, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
-  'Class 8': { startHour: 15, endHour: 16, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
+  'Class 1': { startHour: 8, endHour: 9, platform: 'Google Meet', meetLink: 'https://meet.google.com/pdu-afxb-ndc' },
+  'Class 2': { startHour: 9, endHour: 10, platform: 'Google Meet', meetLink: 'https://meet.google.com/fbm-kmvf-ywr' },
+  'Class 3': { startHour: 10, endHour: 11, platform: 'Google Meet', meetLink: 'https://meet.google.com/zog-fwhw-dwn' },
+  'Class 4': { startHour: 11, endHour: 12, platform: 'Google Meet', meetLink: 'https://meet.google.com/mqb-remi-qrd' },
+  'Class 5': { startHour: 12, endHour: 13, platform: 'Google Meet', meetLink: 'https://meet.google.com/whs-xvho-xdh' },
+  'Class 6': { startHour: 13, endHour: 14, platform: 'Google Meet', meetLink: 'https://meet.google.com/aor-hxyc-biw' },
+  'Class 7': { startHour: 14, endHour: 15, platform: 'Google Meet', meetLink: 'https://meet.google.com/sba-ztes-isr' },
+  'Class 8': { startHour: 15, endHour: 16, platform: 'Google Meet', meetLink: 'https://meet.google.com/rip-zcge-iyj' },
 };
 
 // "How to join" help video on the login card. Either a YouTube embed URL
