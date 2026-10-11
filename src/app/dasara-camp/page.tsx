@@ -1,67 +1,60 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-interface ClassScheduleItem {
-  id: string;
-  time: string;
-  subject: string;
-  topic: string;
-  instructor: string;
-  gradeGroup: string;
+interface ClassSlot {
+  startHour: number; // 24h, IST
+  endHour: number;
   platform: 'Google Meet' | 'Zoom';
   meetLink: string;
-  status: 'live' | 'upcoming' | 'completed';
 }
 
-const DASARA_SCHEDULE: ClassScheduleItem[] = [
-  {
-    id: 'dc-1',
-    time: '09:00 AM – 10:15 AM',
-    subject: '🔬 Science Experiments & Concepts',
-    topic: 'Hands-on Optics & Chemical Reactions at Home',
-    instructor: 'Dr. R. Sharma (Senior Science Faculty)',
-    gradeGroup: 'Classes 6 to 10',
-    platform: 'Google Meet',
-    meetLink: 'https://meet.google.com/new',
-    status: 'live'
-  },
-  {
-    id: 'dc-2',
-    time: '10:30 AM – 11:45 AM',
-    subject: '🧮 Vedic & Speed Mathematics',
-    topic: 'Mental Math Tricks, Faster Calculations & Olympiad Prep',
-    instructor: 'Mr. K. V. Rao (Mathematics HOD)',
-    gradeGroup: 'Classes 3 to 10',
-    platform: 'Zoom',
-    meetLink: 'https://zoom.us/join',
-    status: 'upcoming'
-  },
-  {
-    id: 'dc-3',
-    time: '04:00 PM – 05:00 PM',
-    subject: '💻 Digital Skills & AI Basics',
-    topic: 'Block Coding, Logic Building & Creative Presentation Design',
-    instructor: 'Ms. S. Lakshmi (IT & E-Techno Lead)',
-    gradeGroup: 'Classes 4 to 9',
-    platform: 'Google Meet',
-    meetLink: 'https://meet.google.com/new',
-    status: 'upcoming'
-  },
-  {
-    id: 'dc-4',
-    time: '05:15 PM – 06:15 PM',
-    subject: '🗣️ Spoken English & Storytelling',
-    topic: 'Public Speaking, Vocabulary Building & Festive Narratives',
-    instructor: 'Mrs. Ananya Roy (English & Communication Mentor)',
-    gradeGroup: 'Classes 1 to 8',
-    platform: 'Zoom',
-    meetLink: 'https://zoom.us/join',
-    status: 'upcoming'
-  }
-];
+// One live hour per class. Keys must match the <option> values of the class dropdown.
+// TODO: replace the meetLink placeholders with each class's real Meet/Zoom link.
+const CLASS_SCHEDULE: Record<string, ClassSlot> = {
+  'Class 1': { startHour: 8, endHour: 9, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
+  'Class 2': { startHour: 9, endHour: 10, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
+  'Class 3': { startHour: 10, endHour: 11, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
+  'Class 4': { startHour: 11, endHour: 12, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
+  'Class 5': { startHour: 12, endHour: 13, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
+  'Class 6': { startHour: 13, endHour: 14, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
+  'Class 7': { startHour: 14, endHour: 15, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
+  'Class 8': { startHour: 15, endHour: 16, platform: 'Google Meet', meetLink: 'https://meet.google.com/new' },
+};
+
+// "How to join" help video on the login card. Either a YouTube embed URL
+// (https://www.youtube.com/embed/<id>) or a file in /public, e.g. '/videos/how-to-join.mp4'.
+// Leave empty to hide the video section.
+const HOW_TO_JOIN_VIDEO: string = '';
+
+const formatHour = (h: number) => `${((h + 11) % 12) + 1}:00 ${h < 12 ? 'AM' : 'PM'}`;
+
+// Current time of day in India as fractional hours, regardless of the viewer's device timezone
+const istHourNow = () => {
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).formatToParts(new Date());
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+  return get('hour') + get('minute') / 60 + get('second') / 3600;
+};
+
+const slotStatus = (slot: ClassSlot, now: number): 'live' | 'upcoming' | 'completed' =>
+  now >= slot.endHour ? 'completed' : now >= slot.startHour ? 'live' : 'upcoming';
+
+// Seconds until the next start (today, or tomorrow once today's class is over), or until the end while live
+const countdownSeconds = (slot: ClassSlot, now: number) => {
+  const status = slotStatus(slot, now);
+  const target = status === 'live' ? slot.endHour : status === 'upcoming' ? slot.startHour : slot.startHour + 24;
+  return Math.max(0, Math.round((target - now) * 3600));
+};
+
+const formatCountdown = (total: number) => {
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${h}h ${pad(m)}m ${pad(s)}s`;
+};
 
 const WORKSHEETS = [
   { day: 'Day 1', title: 'Speed Math & Multiplication Shortcuts', size: '1.2 MB' },
@@ -76,10 +69,19 @@ export default function DasaraCampPage() {
   const [studentGrade, setStudentGrade] = useState('Class 7');
   const [studentName, setStudentName] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [selectedDay, setSelectedDay] = useState('Day 1');
   const [activeTab, setActiveTab] = useState<'schedule' | 'worksheets' | 'doubtDesk'>('schedule');
   const [doubtText, setDoubtText] = useState('');
   const [doubtSent, setDoubtSent] = useState(false);
+  const [nowHour, setNowHour] = useState(istHourNow);
+
+  // Tick every second to drive the countdown and flip the card to LIVE / Ended on time
+  useEffect(() => {
+    const id = setInterval(() => setNowHour(istHourNow()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const mySlot = CLASS_SCHEDULE[studentGrade];
+  const myStatus = mySlot ? slotStatus(mySlot, nowHour) : null;
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,6 +89,13 @@ export default function DasaraCampPage() {
       alert('Please enter your Roll Number and your name');
       return;
     }
+    // Record the entry in the class-wise tracking sheet; never block the student on it
+    fetch('/api/dasara-attendance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roll: studentRoll, name: studentName.trim(), grade: studentGrade }),
+      keepalive: true,
+    }).catch(() => {});
     setIsLoggedIn(true);
   };
 
@@ -316,7 +325,33 @@ export default function DasaraCampPage() {
 
             <div style={{ marginTop: '20px', fontSize: '12.5px', color: 'var(--color-secondary-text)' }}>
               Need help joining? Call Coordinator: <a href="tel:07799114947" style={{ color: '#FF5E3A', fontWeight: 700 }}>077991 14947</a>
+              {' '}or <a href="tel:6304467271" style={{ color: '#FF5E3A', fontWeight: 700 }}>63044 67271</a>
             </div>
+
+            {HOW_TO_JOIN_VIDEO && (
+              <div style={{ marginTop: '24px', textAlign: 'left' }}>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: '#1F1813', marginBottom: '8px' }}>
+                  🎬 How to join your class (watch first)
+                </div>
+                {HOW_TO_JOIN_VIDEO.includes('youtube.com/embed/') ? (
+                  <iframe
+                    src={HOW_TO_JOIN_VIDEO}
+                    title="How to join your Dasara live class"
+                    allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ width: '100%', aspectRatio: '16 / 9', border: 0, borderRadius: '16px' }}
+                  />
+                ) : (
+                  <video
+                    src={HOW_TO_JOIN_VIDEO}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    style={{ width: '100%', borderRadius: '16px', background: '#000' }}
+                  />
+                )}
+              </div>
+            )}
           </div>
         ) : (
           /* Student Live Dashboard */
@@ -378,131 +413,127 @@ export default function DasaraCampPage() {
             {/* TAB 1: Live Class Schedule & Join Buttons */}
             {activeTab === 'schedule' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-                  <h3 style={{ fontSize: '22px', fontWeight: 800 }}>
-                    Today&apos;s Live Sessions &amp; Video Rooms
-                  </h3>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'].map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => setSelectedDay(d)}
-                        style={{
-                          background: selectedDay === d ? '#FF5E3A' : '#FFFFFF',
-                          color: selectedDay === d ? '#FFFFFF' : '#1F1813',
-                          border: '1px solid rgba(0,0,0,0.08)',
-                          borderRadius: '12px',
-                          padding: '6px 14px',
-                          fontSize: '12.5px',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {d}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <h3 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '20px' }}>
+                  Your Live Class · {studentGrade}
+                </h3>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-                  {DASARA_SCHEDULE.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        background: '#FFFFFF',
-                        borderRadius: '24px',
-                        padding: '24px',
-                        boxShadow: 'var(--shadow-sm)',
-                        border: item.status === 'live' ? '2px solid #FF5E3A' : '1px solid rgba(0,0,0,0.06)',
-                        position: 'relative',
+                {mySlot && myStatus ? (
+                  <div
+                    style={{
+                      maxWidth: '520px',
+                      background: '#FFFFFF',
+                      borderRadius: '24px',
+                      padding: '24px',
+                      boxShadow: 'var(--shadow-sm)',
+                      border: myStatus === 'live' ? '2px solid #FF5E3A' : '1px solid rgba(0,0,0,0.06)',
+                      position: 'relative'
+                    }}
+                  >
+                    {myStatus === 'live' && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '16px',
+                        right: '16px',
+                        background: '#FF3B30',
+                        color: '#FFFFFF',
+                        padding: '4px 10px',
+                        borderRadius: '9999px',
+                        fontSize: '11px',
+                        fontWeight: 800,
                         display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between'
-                      }}
-                    >
-                      {item.status === 'live' && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '16px',
-                          right: '16px',
-                          background: '#FF3B30',
-                          color: '#FFFFFF',
-                          padding: '4px 10px',
-                          borderRadius: '9999px',
-                          fontSize: '11px',
-                          fontWeight: 800,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}>
-                          <span style={{ width: '6px', height: '6px', background: '#FFFFFF', borderRadius: '50%' }}></span>
-                          LIVE NOW
-                        </div>
-                      )}
-
-                      <div>
-                        <span style={{
-                          fontSize: '12px',
-                          fontWeight: 700,
-                          color: '#FF5E3A',
-                          background: '#FFEDE9',
-                          padding: '4px 10px',
-                          borderRadius: '8px',
-                          display: 'inline-block',
-                          marginBottom: '10px'
-                        }}>
-                          ⏰ {item.time}
-                        </span>
-
-                        <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#1F1813', marginBottom: '6px' }}>
-                          {item.subject}
-                        </h4>
-
-                        <p style={{ fontSize: '13.5px', color: 'var(--color-secondary-text)', lineHeight: 1.4, marginBottom: '14px' }}>
-                          <strong>Topic:</strong> {item.topic}
-                        </p>
-
-                        <div style={{ fontSize: '12.5px', color: '#60574D', marginBottom: '8px' }}>
-                          👨‍🏫 <strong>Instructor:</strong> {item.instructor}
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#8C8275', marginBottom: '20px' }}>
-                          🎯 <strong>Target:</strong> {item.gradeGroup} · Platform: <strong>{item.platform}</strong>
-                        </div>
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <span style={{ width: '6px', height: '6px', background: '#FFFFFF', borderRadius: '50%' }}></span>
+                        LIVE NOW
                       </div>
+                    )}
 
-                      <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                        <a
-                          href={item.meetLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-pill btn-coral-gradient"
-                          style={{
-                            flex: 1,
-                            fontSize: '13.5px',
-                            padding: '10px 16px',
-                            textAlign: 'center',
-                            textDecoration: 'none'
-                          }}
-                        >
-                          {item.platform === 'Google Meet' ? '🎥 Join Google Meet' : '📹 Join Zoom Room'}
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(item.meetLink);
-                            alert('Meeting Link copied to clipboard!');
-                          }}
-                          className="btn-pill btn-white"
-                          title="Copy Link"
-                          style={{ padding: '10px 14px', fontSize: '13px' }}
-                        >
-                          📋
-                        </button>
+                    <span style={{
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      color: '#FF5E3A',
+                      background: '#FFEDE9',
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      display: 'inline-block',
+                      marginBottom: '10px'
+                    }}>
+                      ⏰ {formatHour(mySlot.startHour)} – {formatHour(mySlot.endHour)}
+                    </span>
+
+                    <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#1F1813', marginBottom: '6px' }}>
+                      {studentGrade} Dasara Live Session
+                    </h4>
+
+                    <p style={{ fontSize: '13.5px', color: 'var(--color-secondary-text)', lineHeight: 1.4, marginBottom: '20px' }}>
+                      {myStatus === 'live' && 'Your class is running now. Join right away!'}
+                      {myStatus !== 'live' && `Your class starts at ${formatHour(mySlot.startHour)}. Please join 5 minutes early.`}
+                      {' '}Platform: <strong>{mySlot.platform}</strong>
+                    </p>
+
+                    <div style={{
+                      background: myStatus === 'live' ? '#FFEDE9' : '#FAF8F4',
+                      borderRadius: '16px',
+                      padding: '14px 16px',
+                      marginBottom: '20px',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-secondary-text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {myStatus === 'live' ? 'Class ends in' : 'Your class starts in'}
+                      </div>
+                      <div style={{ fontSize: '28px', fontWeight: 900, color: '#FF5E3A', fontVariantNumeric: 'tabular-nums', marginTop: '2px' }}>
+                        {formatCountdown(countdownSeconds(mySlot, nowHour))}
                       </div>
                     </div>
-                  ))}
-                </div>
+
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <a
+                        href={mySlot.meetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-pill btn-coral-gradient"
+                        style={{
+                          flex: 1,
+                          fontSize: '13.5px',
+                          padding: '10px 16px',
+                          textAlign: 'center',
+                          textDecoration: 'none'
+                        }}
+                      >
+                        {mySlot.platform === 'Google Meet' ? '🎥 Join Google Meet' : '📹 Join Zoom Room'}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(mySlot.meetLink);
+                          alert('Meeting Link copied to clipboard!');
+                        }}
+                        className="btn-pill btn-white"
+                        title="Copy Link"
+                        style={{ padding: '10px 14px', fontSize: '13px' }}
+                      >
+                        📋
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    maxWidth: '520px',
+                    background: '#FFFFFF',
+                    borderRadius: '24px',
+                    padding: '24px',
+                    boxShadow: 'var(--shadow-sm)',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    fontSize: '14px',
+                    color: 'var(--color-secondary-text)',
+                    lineHeight: 1.5
+                  }}>
+                    The live class timing for <strong>{studentGrade}</strong> has not been announced yet.
+                    Please call the coordinator at <a href="tel:07799114947" style={{ color: '#FF5E3A', fontWeight: 700 }}>077991 14947</a>
+                    {' '}or <a href="tel:6304467271" style={{ color: '#FF5E3A', fontWeight: 700 }}>63044 67271</a>.
+                  </div>
+                )}
               </div>
             )}
 
