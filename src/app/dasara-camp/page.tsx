@@ -123,8 +123,8 @@ export default function DasaraCampPage() {
             </div>
           </Link>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Link href="/" className="btn-pill btn-white" style={{ fontSize: '13.5px', padding: '8px 16px' }}>
+          <div className="nav-side-actions">
+            <Link href="/" className="btn-pill btn-white nav-back-btn">
               ← Back<span className="hide-on-phone"> to Main Site</span>
             </Link>
             {isLoggedIn && (
@@ -134,7 +134,7 @@ export default function DasaraCampPage() {
                 className="btn-pill btn-outline-dark"
                 style={{ fontSize: '12.5px', padding: '6px 14px' }}
               >
-                Sign Out ({studentRoll})
+                Sign Out<span className="hide-on-phone"> ({studentRoll})</span>
               </button>
             )}
           </div>

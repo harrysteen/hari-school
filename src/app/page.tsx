@@ -832,7 +832,7 @@ export default function HariETechnoSchool() {
                 At <strong>HARI E-TECHNO SCHOOL</strong>, our daily mission is to empower students with technological fluency, scientific rigor, and deep-rooted moral values so they emerge as globally competent, responsible citizens.
               </p>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '16px 20px' }}>
                 <button
                   type="button"
                   className="btn-pill btn-coral-gradient"

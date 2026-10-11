@@ -121,7 +121,7 @@ export default function GalleryPage() {
             </div>
           </Link>
 
-          <Link href="/" className="btn-pill btn-white" style={{ fontSize: '13.5px', padding: '8px 16px' }}>
+          <Link href="/" className="btn-pill btn-white nav-back-btn">
             ← Back<span className="hide-on-phone"> to Main Site</span>
           </Link>
         </div>

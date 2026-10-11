@@ -18,14 +18,14 @@ export default async function PageHeader({ backHref = '/', backLabel = 'to Main 
           </div>
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="nav-side-actions">
           {session && (
             <form action={logout} className="header-user">
               <span className="header-user-name hide-on-phone">👤 {session.name}</span>
               <button type="submit" className="btn-pill btn-outline-dark header-logout">Log out</button>
             </form>
           )}
-          <Link href={backHref} className="btn-pill btn-white" style={{ fontSize: '13.5px', padding: '8px 16px' }}>
+          <Link href={backHref} className="btn-pill btn-white nav-back-btn">
             ← Back<span className="hide-on-phone"> {backLabel}</span>
           </Link>
         </div>
