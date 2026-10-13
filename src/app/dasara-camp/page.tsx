@@ -22,6 +22,10 @@ const CLASS_SCHEDULE: Record<string, ClassSlot> = {
   'Class 6': { startHour: 13, endHour: 14, platform: 'Google Meet', meetLink: 'https://meet.google.com/aor-hxyc-biw' },
   'Class 7': { startHour: 14, endHour: 15, platform: 'Google Meet', meetLink: 'https://meet.google.com/sba-ztes-isr' },
   'Class 8': { startHour: 15, endHour: 16, platform: 'Google Meet', meetLink: 'https://meet.google.com/rip-zcge-iyj' },
+  'Class 9': { startHour: 16, endHour: 17, platform: 'Google Meet', meetLink: 'https://meet.google.com/ibt-pkos-ith' },
+  'Class 10': { startHour: 17, endHour: 18, platform: 'Google Meet', meetLink: 'https://meet.google.com/qmm-mndc-yrm' },
+  'Inter 1st Year': { startHour: 18, endHour: 19, platform: 'Google Meet', meetLink: 'https://meet.google.com/wir-rvng-zin' },
+  'Inter 2nd Year': { startHour: 19, endHour: 20, platform: 'Google Meet', meetLink: 'https://meet.google.com/ewn-hwun-ihp' },
 };
 
 // "How to join" help video on the login card. Either a YouTube embed URL
@@ -68,6 +72,9 @@ export default function DasaraCampPage() {
   const [studentRoll, setStudentRoll] = useState('');
   const [studentGrade, setStudentGrade] = useState('Class 7');
   const [studentName, setStudentName] = useState('');
+  const [role, setRole] = useState<'student' | 'teacher'>('student');
+  const [teacherSubject, setTeacherSubject] = useState('');
+  const isTeacher = role === 'teacher';
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState<'schedule' | 'worksheets' | 'doubtDesk'>('schedule');
   const [doubtText, setDoubtText] = useState('');
@@ -85,15 +92,19 @@ export default function DasaraCampPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!studentRoll || !studentName.trim()) {
-      alert('Please enter your Roll Number and your name');
+    if (isTeacher ? !studentName.trim() || !teacherSubject.trim() : !studentRoll || !studentName.trim()) {
+      alert(isTeacher ? 'Please enter your name and the subject you are teaching today' : 'Please enter your Roll Number and your name');
       return;
     }
-    // Record the entry in the class-wise tracking sheet; never block the student on it
+    // Record the entry in the tracking sheet (students: class-wise tabs, teachers: "Teachers" tab); never block on it
     fetch('/api/dasara-attendance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ roll: studentRoll, name: studentName.trim(), grade: studentGrade }),
+      body: JSON.stringify(
+        isTeacher
+          ? { role, name: studentName.trim(), grade: studentGrade, subject: teacherSubject.trim() }
+          : { role, roll: studentRoll, name: studentName.trim(), grade: studentGrade }
+      ),
       keepalive: true,
     }).catch(() => {});
     setIsLoggedIn(true);
@@ -134,7 +145,7 @@ export default function DasaraCampPage() {
                 className="btn-pill btn-outline-dark"
                 style={{ fontSize: '12.5px', padding: '6px 14px' }}
               >
-                Sign Out<span className="hide-on-phone"> ({studentRoll})</span>
+                Sign Out{!isTeacher && <span className="hide-on-phone"> ({studentRoll})</span>}
               </button>
             )}
           </div>
@@ -217,17 +228,53 @@ export default function DasaraCampPage() {
               fontSize: '28px',
               margin: '0 auto 16px auto'
             }}>
-              🎓
+              {isTeacher ? '👩‍🏫' : '🎓'}
             </div>
 
             <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px', color: '#1F1813' }}>
-              Student Portal Access
+              {isTeacher ? 'Teacher Portal Access' : 'Student Portal Access'}
             </h2>
-            <p style={{ fontSize: '13.5px', color: 'var(--color-secondary-text)', marginBottom: '24px' }}>
-              Enter your Roll Number and name to access your live classroom links and daily holiday materials.
+            <p style={{ fontSize: '13.5px', color: 'var(--color-secondary-text)', marginBottom: '20px' }}>
+              {isTeacher
+                ? 'Enter your name, the class you are taking and today\'s subject to open the class room.'
+                : 'Enter your Roll Number and name to access your live classroom links and daily holiday materials.'}
             </p>
 
+            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-dark)', textAlign: 'left', marginBottom: '6px' }}>
+              I am a *
+            </div>
+            <div
+              role="radiogroup"
+              aria-label="I am a"
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: '#FAF8F4', padding: '5px', borderRadius: '16px', marginBottom: '20px' }}
+            >
+              {(['student', 'teacher'] as const).map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  role="radio"
+                  aria-checked={role === r}
+                  onClick={() => setRole(r)}
+                  style={{
+                    padding: '10px 8px',
+                    borderRadius: '12px',
+                    border: role === r ? '1.5px solid #FF5E3A' : '1.5px solid transparent',
+                    background: role === r ? '#FFFFFF' : 'transparent',
+                    color: role === r ? '#FF5E3A' : '#60574D',
+                    boxShadow: role === r ? '0 4px 12px rgba(255, 94, 58, 0.15)' : 'none',
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    fontFamily: 'var(--font-sans)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {r === 'student' ? '🎓 Student' : '👩‍🏫 Teacher'}
+                </button>
+              ))}
+            </div>
+
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
+              {!isTeacher && (
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-dark)', display: 'block', marginBottom: '6px' }}>
                   Student Roll Number *
@@ -254,10 +301,11 @@ export default function DasaraCampPage() {
                   }}
                 />
               </div>
+              )}
 
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-dark)', display: 'block', marginBottom: '6px' }}>
-                  Student Name *
+                  {isTeacher ? 'Teacher Name *' : 'Student Name *'}
                 </label>
                 <input
                   type="text"
@@ -265,7 +313,7 @@ export default function DasaraCampPage() {
                   pattern="[A-Za-z. ]+"
                   maxLength={60}
                   title="Letters only"
-                  placeholder="e.g. K. Sai Varun"
+                  placeholder={isTeacher ? 'e.g. Mrs. P. Lakshmi' : 'e.g. K. Sai Varun'}
                   value={studentName}
                   onChange={(e) => setStudentName(e.target.value.replace(/[^A-Za-z. ]/g, ''))}
                   style={{
@@ -283,7 +331,7 @@ export default function DasaraCampPage() {
 
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-dark)', display: 'block', marginBottom: '6px' }}>
-                  Select Grade / Class *
+                  {isTeacher ? 'Class You Are Teaching Today *' : 'Select Grade / Class *'}
                 </label>
                 <select
                   value={studentGrade}
@@ -310,16 +358,44 @@ export default function DasaraCampPage() {
                   <option value="Class 7">Class 7</option>
                   <option value="Class 8">Class 8</option>
                   <option value="Class 9">Class 9</option>
-                  <option value="Class 10 (Grand Exam Special)">Class 10 (Grand Exam Special)</option>
+                  <option value="Class 10">Class 10</option>
+                  <option value="Inter 1st Year">Inter 1st Year</option>
+                  <option value="Inter 2nd Year">Inter 2nd Year</option>
                 </select>
               </div>
+
+              {isTeacher && (
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-dark)', display: 'block', marginBottom: '6px' }}>
+                  Subject You Are Teaching Today *
+                </label>
+                <input
+                  type="text"
+                  required
+                  maxLength={40}
+                  placeholder="e.g. Mathematics"
+                  value={teacherSubject}
+                  onChange={(e) => setTeacherSubject(e.target.value.replace(/[^A-Za-z0-9&,.\- ]/g, ''))}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '14px',
+                    border: '1.5px solid rgba(0,0,0,0.12)',
+                    fontSize: '14px',
+                    fontFamily: 'var(--font-sans)',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              )}
 
               <button
                 type="submit"
                 className="btn-pill btn-coral-gradient"
                 style={{ width: '100%', padding: '14px', fontSize: '15px', marginTop: '8px' }}
               >
-                Enter Dasara Live Portal ↗
+                {isTeacher ? 'Enter Class as Teacher ↗' : 'Enter Dasara Live Portal ↗'}
               </button>
             </form>
 
@@ -372,16 +448,21 @@ export default function DasaraCampPage() {
             }}>
               <div>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#38C757', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  ● Verified Student Active
+                  {isTeacher ? '● Teacher Signed In' : '● Verified Student Active'}
                 </span>
                 <h2 style={{ fontSize: '24px', fontWeight: 800, marginTop: '2px', color: '#1F1813' }}>
-                  Welcome, {studentName || 'Student'} ({studentRoll})
+                  Welcome, {studentName || (isTeacher ? 'Teacher' : 'Student')}{!isTeacher && ` (${studentRoll})`}
                 </h2>
                 <p style={{ fontSize: '13.5px', color: 'var(--color-secondary-text)' }}>
-                  Enrolled Grade: <strong>{studentGrade}</strong> · HARI E-TECHNO Special Holiday Camp
+                  {isTeacher ? (
+                    <>Teaching <strong>{studentGrade}</strong> · Subject: <strong>{teacherSubject}</strong></>
+                  ) : (
+                    <>Enrolled Grade: <strong>{studentGrade}</strong> · HARI E-TECHNO Special Holiday Camp</>
+                  )}
                 </p>
               </div>
 
+              {!isTeacher && (
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
@@ -408,14 +489,20 @@ export default function DasaraCampPage() {
                   ❓ Doubt Desk
                 </button>
               </div>
+              )}
             </div>
 
             {/* TAB 1: Live Class Schedule & Join Buttons */}
-            {activeTab === 'schedule' && (
+            {(activeTab === 'schedule' || isTeacher) && (
               <div>
-                <h3 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '20px' }}>
-                  Your Live Class · {studentGrade}
+                <h3 style={{ fontSize: '22px', fontWeight: 800, marginBottom: isTeacher ? '10px' : '20px' }}>
+                  {isTeacher ? 'Your Class Today' : 'Your Live Class'} · {studentGrade}
                 </h3>
+                {isTeacher && (
+                  <p style={{ maxWidth: '520px', fontSize: '13.5px', color: 'var(--color-secondary-text)', lineHeight: 1.5, marginBottom: '20px' }}>
+                    Please join <strong>10 minutes early</strong>. Use <strong>Present now</strong> in Meet to share your screen.
+                  </p>
+                )}
 
                 {mySlot && myStatus ? (
                   <div
@@ -468,7 +555,7 @@ export default function DasaraCampPage() {
 
                     <p style={{ fontSize: '13.5px', color: 'var(--color-secondary-text)', lineHeight: 1.4, marginBottom: '20px' }}>
                       {myStatus === 'live' && 'Your class is running now. Join right away!'}
-                      {myStatus !== 'live' && `Your class starts at ${formatHour(mySlot.startHour)}. Please join 5 minutes early.`}
+                      {myStatus !== 'live' && `Your class starts at ${formatHour(mySlot.startHour)}. Please join ${isTeacher ? 10 : 5} minutes early.`}
                       {' '}Platform: <strong>{mySlot.platform}</strong>
                     </p>
 
@@ -538,7 +625,7 @@ export default function DasaraCampPage() {
             )}
 
             {/* TAB 2: Holiday Worksheets */}
-            {activeTab === 'worksheets' && (
+            {!isTeacher && activeTab === 'worksheets' && (
               <div style={{
                 background: '#FFFFFF',
                 borderRadius: '28px',
@@ -606,7 +693,7 @@ export default function DasaraCampPage() {
             )}
 
             {/* TAB 3: Doubt Desk / Teacher Assistance */}
-            {activeTab === 'doubtDesk' && (
+            {!isTeacher && activeTab === 'doubtDesk' && (
               <div style={{
                 maxWidth: '640px',
                 margin: '0 auto',

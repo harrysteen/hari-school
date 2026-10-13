@@ -50,9 +50,16 @@ export const CLASS_GROUPS: ClassGroup[] = [
     classes: [cls(6, '6th Class'), cls(7, '7th Class'), cls(8, '8th Class')],
   },
   {
+    id: 'high',
+    name: 'High School',
+    tagline: 'Class 9 & 10 · Board preparation',
+    emoji: '📖',
+    classes: [cls(9, '9th Class'), cls(10, '10th Class')],
+  },
+  {
     id: 'intermediate',
     name: 'Intermediate College',
-    tagline: 'Class 11 & 12 · Junior college',
+    tagline: 'Inter 1st & 2nd Year · Junior college',
     emoji: '🎓',
     classes: [
       { id: 'class-11', label: 'Class 11 (1st Year Inter)', navLabel: '11th Class' },
